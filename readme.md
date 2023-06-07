@@ -56,6 +56,8 @@ Linux 版 SQL Server はインストール済み Docker イメージが配布さ
 
 ## 1. ローカルマシンに SQL Server を立てる
 
+![picture 8](images/b42d457d26e9272b2ea4554adf5303d83c06aea179044aa1319bae25b4dbefc5.png)  
+
 SQL Server には、開発・テスト用途として無償で利用できる、開発者エディション（Developer Edition）と呼ばれるものがあります。これをローカルマシンにインストールして利用することができます。以下に具体的な方法を示します。
 
 ### セットアップ方法
@@ -101,6 +103,35 @@ setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="install" /FEATURES=SQL,Tools
   }
 }
 ```
+
+## 2. SQL Server の Docker イメージを利用する\
+
+![picture 9](images/1a9b19c465ba857ebb39bde5435c09fe4f33cb8f1467e31c79e268b59cc72c75.png)  
+
+Linux 版 SQL Server はインストール済み Docker イメージが配布されています。これを利用すると簡単に SQL Server が立てられます。
+
+### セットアップ方法
+
+- Docker Desktop などを利用し、自マシン内に Docker をインストールします。(WSL2 をインストールしてその中に Docker を立てる方法でも構いません。)
+- SQL Server のイメージを pull して実行します。実行の際、いくつかの環境変数を設定します。
+  - MSSQL_PID=Developer　これにより Developer Edition 相当として利用することができます。
+  - MSSQL_SA_PASSWORD=XXXXXXXX　ここには適切・複雑なパスワードを設定してください。
+
+```
+sudo docker pull mcr.microsoft.com/mssql/server:2022-latest
+
+sudo docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=XXXXXXXX" -e "MSSQL_PID=Developer" -e "MSSQL_TCP_PORT=1433" -p 1433:1433 --name sqlcontainer --hostname sqlserver -d mcr.microsoft.com/mssql/server:2022-latest
+```
+
+- 起動後、docker ps -la でコンテナが正しく起動していることを確認してください。
+
+```
+$ docker ps -la
+CONTAINER ID   IMAGE                                        COMMAND                  CREATED         STATUS         PORTS                                       NAMES
+0bb86ab1ef97   mcr.microsoft.com/mssql/server:2022-latest   "/opt/mssql/bin/perm…"   4 seconds ago   Up 3 seconds   0.0.0.0:1433->1433/tcp, :::1433->1433/tcp   sqlcontainer
+```
+
+### 
 
 
 
