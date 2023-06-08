@@ -7,7 +7,7 @@ SQL Server 2000 に添付されていたサンプルデータベースで、出�
 
 ![picture 3](images/5574b19713ad932af5b6338e23e80becc0d132695ccd031ae39be4d28ac6d184.png)  
 
-これらのデータベースは非常にシンプルなため、現在でも便利に利用できます。セットアップにはこのスクリプトの一部を書き換えたインストールスクリプト（[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)）利用します。主な書き換えポイントは以下の 2 つです。
+これらのデータベースは非常にシンプルなため、現在でも便利に利用できます。セットアップにはこのスクリプトの一部を書き換えたインストールスクリプト（[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)）を利用します。主な書き換えポイントは以下の 2 つです。
 
 - DB 作成処理を除去（Azure SQL DB に対応できるようにするため）
 - authors テーブルにタイムスタンプ列を追加（楽観同時実行制御を用いたデータ更新の例を示すため）
@@ -90,9 +90,6 @@ setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="install" /FEATURES=SQL,Tools
 - 以下の接続文字列を書き換えて利用してください。
   - 主な書き換え場所はパスワードです。
   - TrustServerCertificate が True に設定されていることを確認してください。
-- 既定のインストールでは名前付きパイプ接続のみが有効です。このためこの SQL Server に対してリモートマシンから接続したい場合には、追加で以下 2 つの作業を行ってください。
-  - SQL Server サービスマネージャから TCP 接続を有効化
-  - 当該マシンのファイアウォール設定を変更し、1433 ポートへの着信を許可
 
 ``` web.config の設定例
 <add name="PubsConnection" providerName="System.Data.SqlClient" connectionString="Server=localhost;Initial Catalog=pubs;Persist Security Info=False;User ID=sa;Password=XXXXXXXX;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;ConnectRetryCount=3;ConnectRetryInterval=30;Connection Timeout=60;Language=Japanese;" />
@@ -106,11 +103,17 @@ setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="install" /FEATURES=SQL,Tools
 }
 ```
 
+なお、SQL Server のメディアからの既定のインストールでは名前付きパイプ接続のみが有効ですが、この名前付きパイプ接続はローカルマシン内での通信にしか利用できません。このため、この SQL Server に対してリモートマシンから接続したい場合には、追加で以下 2 つの作業を行ってください。
+
+- SQL Server サービスマネージャから TCP 接続を有効化\
+（※ 設定変更後、SQL Server サービスの再起動が必要）
+- 当該マシンのファイアウォール設定を変更し、1433 ポートへの着信を許可
+
 ## 2. SQL Server の Docker イメージを利用する
 
 ![picture 9](images/1a9b19c465ba857ebb39bde5435c09fe4f33cb8f1467e31c79e268b59cc72c75.png)  
 
-Linux 版 SQL Server はインストール済み Docker イメージが配布されています。これを利用すると簡単に SQL Server が立てられます。
+Linux 版 SQL Server に関しては、クリーンインストール済みの Docker イメージが配布されています。これを利用すると簡単に SQL Server が立てられます。
 
 ### セットアップ方法
 
@@ -170,7 +173,7 @@ create database pubs
 
 ## 3. カスタム Docker イメージを作成・利用する
 
-前述の方法は素早く SQL Server のクリーンインストールを立てられるという意味で便利ですが、一方、コンテナは仮想マシンに比べて削除・作り直しが便利なことから、比較的頻繁にコンテナを作り直すことが多いと思います。しかし前述の方法でコンテナを立て直すと、クリーンインストールの状態に戻ってしまう、すなわちサンプル DB の再セットアップが必要になります（当たり前ですが）。
+前述の方法はクリーンインストールされた SQL Server を素早く立てられるという意味で便利ですが、一方、コンテナで立てた場合には（仮想マシンとして立てた場合と異なり削除・作り直しが便利なことから）、比較的頻繁にコンテナを作り直したい、というケースが多いと思います。しかし前述の方法で用意したコンテナを立て直すと、クリーンインストールの状態に戻ってしまう、すなわちサンプル DB を再セットアップする必要が生じます（当たり前ですが）。
 
 また、開発チーム内の各開発者の PC ごとにデータベースを立てるような場合も、各開発者にいちいちデータベースをセットアップさせるのはさすがに面倒です。
 
