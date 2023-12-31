@@ -7,7 +7,7 @@ SQL Server 2000 に添付されていたサンプルデータベースで、出�
 
 ![picture 3](images/5574b19713ad932af5b6338e23e80becc0d132695ccd031ae39be4d28ac6d184.png)  
 
-これらのデータベースは非常にシンプルなため、現在でも便利に利用できます。セットアップにはこのスクリプトの一部を書き換えたインストールスクリプト（[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)）を利用します。主な書き換えポイントは以下の 2 つです。
+これらのデータベースは非常にシンプルなため、現在でも便利に利用できます。セットアップにはこのスクリプトの一部を書き換えたインストールスクリプト（[pubs_azure_with_timestamp.sql](pubs_azure_with_timestamp.sql)）を利用します。主な書き換えポイントは以下の 2 つです。
 
 - DB 作成処理を除去（Azure SQL DB に対応できるようにするため）
 - authors テーブルにタイムスタンプ列を追加（楽観同時実行制御を用いたデータ更新の例を示すため）
@@ -82,7 +82,7 @@ setup.exe /Q /IACCEPTSQLSERVERLICENSETERMS /ACTION="install" /FEATURES=SQL,Tools
 - 接続後、サーバを右クリックし、新規 DB を作成します。
   - データベース名 : pubs
 - 作成した DB "pubs" を選択し、「新しいクエリ」を選択します。
-- 接続先 DB が ("master" ではなく) "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)"）の中身を貼り付けて実行してください。\
+- 接続先 DB が ("master" ではなく) "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.sql](pubs_azure_with_timestamp.sql)"）の中身を貼り付けて実行してください。\
 ![picture 12](images/db9c3a0922e17b563a008e0545eeb6fc3121d279ee2aa6f54fb4d32c9db2479f.png)  
 
 ### アプリからの接続
@@ -150,7 +150,7 @@ CONTAINER ID   IMAGE                                        COMMAND             
 create database pubs
 ```
 - データベースを "master" から "pubs" に切り替えます。
-- 接続先 DB が "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)"）の中身を貼り付けて実行します。
+- 接続先 DB が "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.sql](pubs_azure_with_timestamp.sql)"）の中身を貼り付けて実行します。
 ![picture 14](images/fe341d056c1c4a28f5590b5ad04f2304f0e9c4339b786377c7dcb5adf8dd8b9f.png)  
 
 ### アプリからの接続
@@ -189,7 +189,7 @@ create database pubs
     - SQL Server を起動する。
     - sqlcmd コマンドを利用して、SQL Server が起動するまで待機する。
     - create database でデータベースを作成する。
-    - 作成したデータベースに接続し、インストールスクリプト（"[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)"）の中身を実行する。
+    - 作成したデータベースに接続し、インストールスクリプト（"[pubs_azure_with_timestamp.sql](pubs_azure_with_timestamp.sql)"）の中身を実行する。
     - （データベースが終了しないように）ログをコンソールに出力し続ける。
   - CMD 命令により、コンテナ起動時に上記のシェルスクリプトが実行されるように仕込んでおきます。
 
@@ -201,14 +201,14 @@ ENV MSSQL_PID=Developer
 ENV MSSQL_TCP_PORT=1433
 
 # 必要なファイルをコピー
-COPY ./pubs_azure_with_timestamp.txt /tmp/
+COPY ./pubs_azure_with_timestamp.sql /tmp/
 
 # SQL Server起動スクリプトの作成
 RUN echo '#!/bin/bash\n\
 /opt/mssql/bin/sqlservr --accept-eula &' > /tmp/sql-server-startup.sh && \
 echo 'until /opt/mssql-tools/bin/sqlcmd -S127.0.0.1 -Usa -P"${SA_PASSWORD}" -q"select 1" ; do sleep 5; done' >> /tmp/sql-server-startup.sh && \
 echo '/opt/mssql-tools/bin/sqlcmd -S127.0.0.1 -Usa -P"${SA_PASSWORD}" -q"create database pubs;"' >> /tmp/sql-server-startup.sh && \
-echo '/opt/mssql-tools/bin/sqlcmd -S127.0.0.1 -Usa -P"${SA_PASSWORD}" -d"pubs" -i"/tmp/pubs_azure_with_timestamp.txt"' >> /tmp/sql-server-startup.sh && \
+echo '/opt/mssql-tools/bin/sqlcmd -S127.0.0.1 -Usa -P"${SA_PASSWORD}" -d"pubs" -i"/tmp/pubs_azure_with_timestamp.sql"' >> /tmp/sql-server-startup.sh && \
 echo 'tail -f /dev/null' >> /tmp/sql-server-startup.sh
 
 # 実行権限の付与
@@ -218,7 +218,7 @@ RUN chmod +x /tmp/sql-server-startup.sh
 CMD /tmp/sql-server-startup.sh
 ```
 
-- Dockerfile をセットアップスクリプト（[pubs_azure_with_timestamp.txt]()）と同じフォルダに置いてビルドを行います。
+- Dockerfile をセットアップスクリプト（[pubs_azure_with_timestamp.sql]()）と同じフォルダに置いてビルドを行います。
 
 ```
 # コンテナ作成
@@ -291,7 +291,7 @@ Azure サブスクリプションを持っている場合には、そこに SQL 
 ![picture 18](images/1c8f05503a54c997ccbb5921b90751ac38975fe85d92e395e0eff97487fbc18b.png)  
 
 - 作成した DB を選択し、「新しいクエリ」を選択します。
-- 接続先 DB が "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.txt](pubs_azure_with_timestamp.txt)"）の中身を貼り付けて実行してください。
+- 接続先 DB が "pubs" になっていることを確認した上で、インストールスクリプト（"[pubs_azure_with_timestamp.sql](pubs_azure_with_timestamp.sql)"）の中身を貼り付けて実行してください。
 ![picture 19](images/84778fc5df894eb89ea5fbb488c8996c1d7fbd0fca67a46ceab23275e1b87e81.png)  
 
 ### アプリからの接続
@@ -318,4 +318,4 @@ pubs データベースは非常に古いデータベースのため、テーブ
 
 ![picture 20](images/911a50aca85b8b8f220fb0c5c974ebdeeb4c4ed86e5052652773de172ec3a1eb.png)  
 
-これらは Entity Framework によって吸収するのがおすすめです。[pubs.cs.txt ファイル](pubs.cs.txt)には、pubs データベースのテーブル定義を Entity Framework で扱えるように変換したものが含まれています。このファイルを Visual Studio で開き、プロジェクトに追加して利用してください。
+これらは Entity Framework によって吸収するのがおすすめです。[pubs.cs ファイル](pubs.cs)には、pubs データベースのテーブル定義を Entity Framework で扱えるように変換したものが含まれています。このファイルを Visual Studio で開き、プロジェクトに追加して利用してください。
